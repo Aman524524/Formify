@@ -1,14 +1,21 @@
+// @ts-check
+
 const OUTPUT_DIR = "dist/";
-const ENTRY_POINT = "src/index.ts";
+const ENTRY_POINT = "src/index.js"; // Changed extension to .js
 const BANNER_FILE = "src/metadata.txt";
 
-const build = async (isProduction: boolean = false): Promise<string> => {
+/**
+ * Builds the project using Bun's build API.
+ * @param {boolean} [isProduction=false] - Flag to determine if the build is for production.
+ * @returns {Promise<string>} - A promise that resolves with the text content of the primary output file.
+ */
+const build = async (isProduction = false) => {
     try {
         const result = await Bun.build({
             entrypoints: [ENTRY_POINT],
 
             banner:
-                await Bun.file(BANNER_FILE).text() +
+                (await Bun.file(BANNER_FILE).text()) +
                 "\n\n" +
                 `const css = \`${await Bun.file("src/static/style.css").text()}\`;` +
                 "\n\n" +
@@ -24,9 +31,10 @@ const build = async (isProduction: boolean = false): Promise<string> => {
         console.warn("[E] Failed to build.");
         return Promise.reject(err);
     }
-}
+};
 
-if (process.argv[1] == import.meta.filename) {
+// Assuming Bun's environment or a module runner that provides these globals
+if (process.argv[1] === import.meta.filename) {
     console.log("[+] Saving to " + OUTPUT_DIR);
     build(true);
 }
