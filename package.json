@@ -2,8 +2,8 @@
   "name": "formify",
   "private": true,
   "scripts": {
-    "build": "bun build/build.ts",
-    "dev": "bun --watch build/serve.ts",
+    "build": "bun build/build.js",
+    "dev": "bun --watch build/serve.js",
     "final": "bun build/build.ts && mv dist/index.js dist/formify.user.js && rm -rf dist/index.js"
   },
   "devDependencies": {
