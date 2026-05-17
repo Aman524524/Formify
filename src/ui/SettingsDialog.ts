@@ -10,102 +10,175 @@ let overlay: HTMLDivElement | null = null;
 const build = (): HTMLDivElement => {
     const el = document.createElement("div");
     el.className = "fy-overlay formify-root";
-    el.innerHTML = `
-        <div class="fy-dialog">
-            <div class="fy-dialog-header">
-                <span class="fy-title">Formify</span>
-                <button class="fy-close" title="Close (Esc)">✕</button>
-            </div>
-            <div class="fy-dialog-body">
-                <!-- General -->
-                <div class="fy-section">
-                    <div class="fy-section-title">General</div>
-                    <div class="fy-field">
-                        <label>API Key</label>
-                        <input type="password" id="fy-apikey" placeholder="Paste Gemini API key" />
-                    </div>
-                    <div class="fy-field">
-                        <label>Model</label>
-                        <select id="fy-model">
-                            ${MODELS.map((m) => `<option value="${m.id}">${m.name}</option>`).join("")}
-                        </select>
-                    </div>
-                    <div class="fy-field">
-                        <label>Search Engine</label>
-                        <select id="fy-search">
-                            ${SEARCH_ENGINES.map((s) => `<option value="${s.urlTemplate}">${s.name}</option>`).join("")}
-                        </select>
-                    </div>
-                </div>
 
-                <!-- Prompt -->
-                <div class="fy-section">
-                    <div class="fy-section-title">Prompt</div>
-                    <div class="fy-field">
-                        <label>System Prompt</label>
-                        <textarea id="fy-prompt" rows="3" placeholder="Instructions for the AI..."></textarea>
-                    </div>
-                </div>
+    const dialog = document.createElement("div");
+    dialog.className = "fy-dialog";
 
-                <!-- Behavior -->
-                <div class="fy-section">
-                    <div class="fy-section-title">Behavior</div>
-                    <div class="fy-field">
-                        <label>Auto-fill answers</label>
-                        <label class="fy-toggle">
-                            <input type="checkbox" id="fy-autofill" />
-                            <span class="fy-slider"></span>
-                        </label>
-                    </div>
-                    <div class="fy-field">
-                        <label>Show AI answers</label>
-                        <label class="fy-toggle">
-                            <input type="checkbox" id="fy-showanswers" />
-                            <span class="fy-slider"></span>
-                        </label>
-                    </div>
-                </div>
+    // ─── Header ──────────────────────────────────────────────────────
+    const headerDiv = document.createElement("div");
+    headerDiv.className = "fy-dialog-header";
+    const titleSpan = document.createElement("span");
+    titleSpan.className = "fy-title";
+    titleSpan.textContent = "Formify";
+    const closeBtn = document.createElement("button");
+    closeBtn.className = "fy-close";
+    closeBtn.title = "Close (Esc)";
+    closeBtn.textContent = "✕";
+    headerDiv.appendChild(titleSpan);
+    headerDiv.appendChild(closeBtn);
 
-                <!-- Appearance -->
-                <div class="fy-section">
-                    <div class="fy-section-title">Appearance</div>
-                    <div class="fy-field">
-                        <label>Theme</label>
-                        <select id="fy-theme">
-                            <option value="light">Light</option>
-                            <option value="dark">Dark</option>
-                            <option value="auto">System</option>
-                        </select>
-                    </div>
-                </div>
+    // ─── Body ────────────────────────────────────────────────────────
+    const body = document.createElement("div");
+    body.className = "fy-dialog-body";
 
-                <!-- Advanced -->
-                <div class="fy-section">
-                    <div class="fy-section-title">Advanced (Selectors)</div>
-                    <div class="fy-field">
-                        <label>Form</label>
-                        <input type="text" id="fy-sel-form" />
-                    </div>
-                    <div class="fy-field">
-                        <label>Question Item</label>
-                        <input type="text" id="fy-sel-questionItem" />
-                    </div>
-                    <div class="fy-field">
-                        <label>Question Data</label>
-                        <input type="text" id="fy-sel-questionDataDiv" />
-                    </div>
-                    <div class="fy-field">
-                        <label>Option Label</label>
-                        <input type="text" id="fy-sel-optionLabel" />
-                    </div>
-                </div>
-            </div>
-            <div class="fy-dialog-footer">
-                <span><kbd class="fy-kbd">Alt+K</kbd> toggle &nbsp; <kbd class="fy-kbd">Alt+M</kbd> hide answers</span>
-                <a href="https://github.com/Aman524524/Formify" target="_blank">GitHub ↗</a>
-            </div>
-        </div>
-    `;
+    // Helper: create a section
+    const section = (title: string): HTMLDivElement => {
+        const sec = document.createElement("div");
+        sec.className = "fy-section";
+        const t = document.createElement("div");
+        t.className = "fy-section-title";
+        t.textContent = title;
+        sec.appendChild(t);
+        return sec;
+    };
+
+    // Helper: create a field with label + control
+    const field = (labelText: string, control: HTMLElement): HTMLDivElement => {
+        const f = document.createElement("div");
+        f.className = "fy-field";
+        const lbl = document.createElement("label");
+        lbl.textContent = labelText;
+        f.appendChild(lbl);
+        f.appendChild(control);
+        return f;
+    };
+
+    // Helper: create a <select> with options
+    const makeSelect = (id: string, options: { label: string; value: string }[]): HTMLSelectElement => {
+        const sel = document.createElement("select");
+        sel.id = id;
+        for (const opt of options) {
+            const o = document.createElement("option");
+            o.value = opt.value;
+            o.textContent = opt.label;
+            sel.appendChild(o);
+        }
+        return sel;
+    };
+
+    // Helper: create a text/password input
+    const makeInput = (id: string, type: string, placeholder?: string): HTMLInputElement => {
+        const inp = document.createElement("input");
+        inp.type = type;
+        inp.id = id;
+        if (placeholder) inp.placeholder = placeholder;
+        return inp;
+    };
+
+    // Helper: create a password field with eye toggle
+    const makePasswordInput = (id: string, placeholder?: string): HTMLDivElement => {
+        const wrap = document.createElement("div");
+        wrap.className = "fy-password-wrap";
+        const inp = document.createElement("input");
+        inp.type = "password";
+        inp.id = id;
+        if (placeholder) inp.placeholder = placeholder;
+        const eyeBtn = document.createElement("button");
+        eyeBtn.type = "button";
+        eyeBtn.className = "fy-eye-btn";
+        eyeBtn.title = "Toggle visibility";
+        eyeBtn.textContent = "👁";
+        eyeBtn.addEventListener("click", () => {
+            const isPassword = inp.type === "password";
+            inp.type = isPassword ? "text" : "password";
+            eyeBtn.textContent = isPassword ? "🙈" : "👁";
+        });
+        wrap.appendChild(inp);
+        wrap.appendChild(eyeBtn);
+        return wrap;
+    };
+
+    // ── General section ──
+    const generalSec = section("General");
+    generalSec.appendChild(field("API Key", makePasswordInput("fy-apikey", "Paste Gemini API key")));
+    generalSec.appendChild(field("Model", makeSelect("fy-model", MODELS.map((m) => ({ label: m.name, value: m.id })))));
+    generalSec.appendChild(field("Search Engine", makeSelect("fy-search", SEARCH_ENGINES.map((s) => ({ label: s.name, value: s.urlTemplate })))));
+    body.appendChild(generalSec);
+
+    // ── Prompt section ──
+    const promptSec = section("Prompt");
+    const textarea = document.createElement("textarea");
+    textarea.id = "fy-prompt";
+    textarea.rows = 3;
+    textarea.placeholder = "Instructions for the AI...";
+    promptSec.appendChild(field("System Prompt", textarea));
+    body.appendChild(promptSec);
+
+    // ── Behavior section ──
+    const behaviorSec = section("Behavior");
+
+    const makeToggle = (id: string): HTMLLabelElement => {
+        const lbl = document.createElement("label");
+        lbl.className = "fy-toggle";
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.id = id;
+        const slider = document.createElement("span");
+        slider.className = "fy-slider";
+        lbl.appendChild(cb);
+        lbl.appendChild(slider);
+        return lbl;
+    };
+
+    behaviorSec.appendChild(field("Auto-fill answers", makeToggle("fy-autofill")));
+    behaviorSec.appendChild(field("Show AI answers", makeToggle("fy-showanswers")));
+    body.appendChild(behaviorSec);
+
+    // ── Appearance section ──
+    const appearanceSec = section("Appearance");
+    appearanceSec.appendChild(field("Theme", makeSelect("fy-theme", [
+        { label: "Light", value: "light" },
+        { label: "Dark", value: "dark" },
+        { label: "System", value: "auto" },
+    ])));
+    body.appendChild(appearanceSec);
+
+    // ── Advanced section ──
+    const advancedSec = section("Advanced (Selectors)");
+    advancedSec.appendChild(field("Form", makeInput("fy-sel-form", "text")));
+    advancedSec.appendChild(field("Question Item", makeInput("fy-sel-questionItem", "text")));
+    advancedSec.appendChild(field("Question Data", makeInput("fy-sel-questionDataDiv", "text")));
+    advancedSec.appendChild(field("Option Label", makeInput("fy-sel-optionLabel", "text")));
+    body.appendChild(advancedSec);
+
+    // ─── Footer ──────────────────────────────────────────────────────
+    const footer = document.createElement("div");
+    footer.className = "fy-dialog-footer";
+
+    const shortcuts = document.createElement("span");
+    const kbd1 = document.createElement("kbd");
+    kbd1.className = "fy-kbd";
+    kbd1.textContent = "Alt+K";
+    const kbd2 = document.createElement("kbd");
+    kbd2.className = "fy-kbd";
+    kbd2.textContent = "Alt+M";
+    shortcuts.appendChild(kbd1);
+    shortcuts.append(" toggle \u00a0 ");
+    shortcuts.appendChild(kbd2);
+    shortcuts.append(" hide answers");
+
+    const ghLink = document.createElement("a");
+    ghLink.href = "https://github.com/Aman524524/Formify";
+    ghLink.target = "_blank";
+    ghLink.textContent = "GitHub ↗";
+
+    footer.appendChild(shortcuts);
+    footer.appendChild(ghLink);
+
+    dialog.appendChild(headerDiv);
+    dialog.appendChild(body);
+    dialog.appendChild(footer);
+    el.appendChild(dialog);
 
     return el;
 };
@@ -233,3 +306,5 @@ export const toggle = (force?: boolean) => {
 export const isOpen = (): boolean => {
     return overlay?.classList.contains("active") ?? false;
 };
+
+export const refresh = () => syncToUI();

@@ -3,7 +3,7 @@
 export interface ModelOption {
     id: string;
     name: string;
-    provider: "gemini";
+    provider: "gemini" | "openai";
 }
 
 // ─── Search Engine ──────────────────────────────────────────────────────────

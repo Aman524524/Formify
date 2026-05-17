@@ -20,7 +20,7 @@ AI-powered Google Forms auto-filler. Parses questions, sends them to Gemini, and
 
    [**Install Formify**](https://github.com/Aman524524/Formify/raw/refs/heads/main/dist/formify.user.js)
 
-3. Open any Google Form — you'll be prompted for a [Gemini API key](https://aistudio.google.com/apikey) (free)
+3. Open any Google Form — you'll be prompted for a [Gemini API key](https://aistudio.google.com/api-keys) (free)
 
 ## Keyboard Shortcuts
 

@@ -63,13 +63,15 @@ const parseQuestions = (form: HTMLFormElement, sel: FormSelectors): ParsedQuesti
     const items = list.querySelectorAll(sel.questionItem);
     if (!items.length) warn("No questions found on the page");
 
-    return [...items].map((el) => {
-        const dataDiv = el.querySelector(sel.questionDataDiv);
-        const raw = dataDiv?.getAttribute("data-params");
-        const cleaned = raw?.replace("%.@.", "[").replace(/&quot;/g, '"');
-        const arr = JSON.parse(cleaned || "[]")[0];
-        return mapQuestion(arr);
-    });
+    return [...items]
+        .filter((el) => el.querySelector(sel.questionDataDiv))
+        .map((el) => {
+            const dataDiv = el.querySelector(sel.questionDataDiv)!;
+            const raw = dataDiv.getAttribute("data-params");
+            const cleaned = raw?.replace("%.@.", "[").replace(/&quot;/g, '"');
+            const arr = JSON.parse(cleaned || "[]")[0];
+            return mapQuestion(arr);
+        });
 };
 
 const parseFromDOM = (sel: FormSelectors): ParsedResult => {
@@ -84,17 +86,26 @@ const parseFromDOM = (sel: FormSelectors): ParsedResult => {
 // ─── Public API ─────────────────────────────────────────────────────────────
 
 export const parse = (): ParsedResult => {
+    // Always prefer DOM parsing — it returns only the current page's questions,
+    // which is correct for multi-page forms.  The global variable contains ALL
+    // pages and would cause an index mismatch with the visible DOM elements.
+    const selectors = Storage.getSelectors();
+    try {
+        log("Using DOM parser");
+        return parseFromDOM(selectors);
+    } catch {
+        // DOM parsing failed
+    }
+
     try {
         const globalData = unsafeWindow?.FB_PUBLIC_LOAD_DATA_;
         if (globalData) {
-            log("Using global variable parser");
+            log("Falling back to global variable parser");
             return parseFromGlobalVar(globalData);
         }
     } catch {
         // not available
     }
 
-    log("Using DOM parser");
-    const selectors = Storage.getSelectors();
-    return parseFromDOM(selectors);
+    throw new Error("Could not parse form");
 };

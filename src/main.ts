@@ -26,11 +26,12 @@ declare const GM_addStyle: (css: string) => void;
     // ─── API key check ──────────────────────────────────────────────────────
     if (!Storage.get("apiKey")) {
         const key = prompt(
-            "Formify: Paste your Gemini API key.\n" +
-            "Get a free key: https://aistudio.google.com/apikey"
+            "Formify: Paste your Gemini API key.\n\n" +
+            "Get a free key at: https://aistudio.google.com/api-keys"
         );
         if (key) {
             Storage.set("apiKey", key);
+            SettingsDialog.refresh();
             Toast.show("API key saved", 2000, "success");
         } else {
             Toast.show("API key required — open settings with Alt+K", 4000, "error");
@@ -74,7 +75,8 @@ declare const GM_addStyle: (css: string) => void;
 
     // ─── Process each question ──────────────────────────────────────────────
     const selectors = Storage.getSelectors();
-    const questionEls = document.querySelectorAll(selectors.questionItem);
+    const questionEls = [...document.querySelectorAll(selectors.questionItem)]
+        .filter((el) => el.querySelector(selectors.questionDataDiv));
 
     for (let i = 0; i < questionEls.length; i++) {
         const container = questionEls[i];
@@ -105,6 +107,11 @@ declare const GM_addStyle: (css: string) => void;
             error("Question", i + 1, "failed:", err);
         }
 
+        // Parse JSON response
+        const parsed = isError
+            ? { answer: aiAnswer, explanation: "" }
+            : AI.parseResponse(aiAnswer);
+
         // Remove skeleton, insert real card
         skeleton.remove();
 
@@ -115,7 +122,7 @@ declare const GM_addStyle: (css: string) => void;
 
             for (const label of labels) {
                 const text = label.textContent?.trim();
-                if (text && aiAnswer.trim().includes(text)) {
+                if (text && parsed.answer.trim().includes(text)) {
                     // Type 2 = MCQ, Type 4 = Checkboxes
                     if (question.type === 2 || question.type === 4) {
                         (label as HTMLElement).click();
@@ -129,7 +136,8 @@ declare const GM_addStyle: (css: string) => void;
         const card = AnswerCard.create({
             question: question.title,
             options: question.options,
-            answer: aiAnswer,
+            answer: parsed.answer,
+            explanation: parsed.explanation,
             isError,
         });
 

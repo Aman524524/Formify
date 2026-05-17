@@ -21,12 +21,27 @@
 
     GM_xmlhttpRequest({
         method: 'GET',
-        url: DEV_SERVER + '/?_=' + Date.now(),
+        url: DEV_SERVER + '/build?_=' + Date.now(),
         onload: function (response) {
             if (response.status === 200) {
                 try {
-                    const fn = new Function('GM_addStyle', 'unsafeWindow', response.responseText);
-                    fn(GM_addStyle, typeof unsafeWindow !== 'undefined' ? unsafeWindow : window);
+                    var code = response.responseText;
+
+                    // Google Forms enforces Trusted Types — eval() accepts TrustedScript
+                    // but the Function constructor does not, so we use eval here.
+                    if (typeof trustedTypes !== 'undefined' && trustedTypes.createPolicy) {
+                        try {
+                            var policy = trustedTypes.createPolicy('formify-dev', {
+                                createScript: function (s) { return s; },
+                            });
+                            code = policy.createScript(code);
+                        } catch (_) {
+                            // Policy creation may fail if CSP restricts policy names — try eval anyway
+                        }
+                    }
+
+                    // eval runs in this scope, so GM_addStyle and unsafeWindow are accessible
+                    eval(code);
                 } catch (err) {
                     console.error('[Formify Dev] Eval error:', err);
                 }

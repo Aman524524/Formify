@@ -7,10 +7,11 @@ interface AnswerCardParams {
     question: string;
     options: ParsedOption[] | null;
     answer: string;
+    explanation: string;
     isError?: boolean;
 }
 
-export const create = ({ question, options, answer, isError }: AnswerCardParams): HTMLDivElement => {
+export const create = ({ question, options, answer, explanation, isError }: AnswerCardParams): HTMLDivElement => {
     const model = Storage.get("model");
     const showAnswers = Storage.get("showAnswers");
     const optionsStr = options?.map((o) => o.value).join(", ") || "";
@@ -18,20 +19,50 @@ export const create = ({ question, options, answer, isError }: AnswerCardParams)
     const card = document.createElement("div");
     card.className = `fy-answer formify-root${showAnswers ? "" : " hidden"}`;
 
-    card.innerHTML = `
-        <div class="fy-answer-header">
-            <span class="fy-model-badge">${escapeHtml(model)}</span>
-            <span class="fy-actions">
-                <button data-action="copy" title="Copy to clipboard">Copy</button>
-                <button data-action="regen" title="Re-generate">Retry</button>
-                <button data-action="search" title="Search this question">Search</button>
-                <button data-action="chat" title="Open in chat">Chat</button>
-            </span>
-        </div>
-        <div class="fy-answer-body${isError ? " error" : ""}">${escapeHtml(answer)}</div>
-    `;
+    // Header
+    const header = document.createElement("div");
+    header.className = "fy-answer-header";
 
-    const body = card.querySelector(".fy-answer-body") as HTMLElement;
+    const badge = document.createElement("span");
+    badge.className = "fy-model-badge";
+    badge.textContent = "🦕 " + model;
+
+    const actions = document.createElement("span");
+    actions.className = "fy-actions";
+    const buttonDefs: [string, string, string][] = [
+        ["copy", "Copy to clipboard", "Copy"],
+        ["regen", "Re-generate", "Retry"],
+        ["search", "Search this question", "Search"],
+        ["chat", "Open in chat", "Chat"],
+    ];
+    for (const [action, title, label] of buttonDefs) {
+        const btn = document.createElement("button");
+        btn.dataset["action"] = action;
+        btn.title = title;
+        btn.textContent = label;
+        actions.appendChild(btn);
+    }
+
+    header.appendChild(badge);
+    header.appendChild(actions);
+
+    // Body
+    const body = document.createElement("div");
+    body.className = `fy-answer-body${isError ? " error" : ""}`;
+
+    const answerEl = document.createElement("div");
+    answerEl.className = "fy-answer-text";
+    answerEl.textContent = answer;
+    body.appendChild(answerEl);
+
+    const explEl = document.createElement("div");
+    explEl.className = "fy-explanation";
+    explEl.textContent = explanation;
+    if (!explanation) explEl.style.display = "none";
+    body.appendChild(explEl);
+
+    card.appendChild(header);
+    card.appendChild(body);
     let currentAnswer = answer;
 
     card.addEventListener("click", async (e) => {
@@ -52,7 +83,9 @@ export const create = ({ question, options, answer, isError }: AnswerCardParams)
         }
 
         if (action === "regen") {
-            body.textContent = "Thinking...";
+            answerEl.textContent = "Thinking...";
+            explEl.textContent = "";
+            explEl.style.display = "none";
             body.classList.add("loading");
             body.classList.remove("error");
             btn.setAttribute("disabled", "");
@@ -60,15 +93,18 @@ export const create = ({ question, options, answer, isError }: AnswerCardParams)
             try {
                 const prompt = buildPrompt(question, optionsStr);
                 const res = await AI.getResponse({ prompt });
-                currentAnswer = res;
-                body.textContent = res;
+                const reParsed = AI.parseResponse(res);
+                currentAnswer = reParsed.answer;
+                answerEl.textContent = reParsed.answer;
+                explEl.textContent = reParsed.explanation;
+                explEl.style.display = reParsed.explanation ? "" : "none";
                 body.classList.remove("loading");
 
                 if (res.startsWith("❌") || res.startsWith("⚠️")) {
                     body.classList.add("error");
                 }
             } catch (err) {
-                body.textContent = "Failed to regenerate: " + (err instanceof Error ? err.message : "Unknown error");
+                answerEl.textContent = "Failed to regenerate: " + (err instanceof Error ? err.message : "Unknown error");
                 body.classList.remove("loading");
                 body.classList.add("error");
             } finally {
@@ -77,7 +113,8 @@ export const create = ({ question, options, answer, isError }: AnswerCardParams)
         }
 
         if (action === "search") {
-            const url = Storage.get("searchEngine") + encodeURIComponent(question);
+            const query = question + (optionsStr ? " " + optionsStr : "");
+            const url = Storage.get("searchEngine") + encodeURIComponent(query);
             window.open(url, "_blank");
         }
 
@@ -96,23 +133,30 @@ export const create = ({ question, options, answer, isError }: AnswerCardParams)
 export const createSkeleton = (): HTMLDivElement => {
     const card = document.createElement("div");
     card.className = "fy-answer formify-root";
-    card.innerHTML = `
-        <div class="fy-answer-header">
-            <span class="fy-model-badge">${escapeHtml(Storage.get("model"))}</span>
-            <span class="fy-actions"></span>
-        </div>
-        <div class="fy-answer-body loading">Thinking...</div>
-    `;
+
+    const header = document.createElement("div");
+    header.className = "fy-answer-header";
+
+    const badge = document.createElement("span");
+    badge.className = "fy-model-badge";
+    badge.textContent = "🦕 " + Storage.get("model");
+
+    const actionsSpan = document.createElement("span");
+    actionsSpan.className = "fy-actions";
+
+    header.appendChild(badge);
+    header.appendChild(actionsSpan);
+
+    const body = document.createElement("div");
+    body.className = "fy-answer-body loading";
+    body.textContent = "Thinking...";
+
+    card.appendChild(header);
+    card.appendChild(body);
     return card;
 };
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
-
-const escapeHtml = (text: string): string => {
-    const div = document.createElement("div");
-    div.textContent = text;
-    return div.innerHTML;
-};
 
 const buildPrompt = (question: string, optionsStr: string): string => {
     return Storage.get("customPrompt") + "\n" + question +

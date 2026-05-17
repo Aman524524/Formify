@@ -12,32 +12,47 @@ let offsetY = 0;
 const build = (): HTMLDivElement => {
     const el = document.createElement("div");
     el.className = "fy-chat formify-root";
-    el.innerHTML = `
-        <div class="fy-chat-header">
-            <span>Formify Chat</span>
-            <button title="Close">✕</button>
-        </div>
-        <div class="fy-chat-messages"></div>
-        <div class="fy-chat-input">
-            <input type="text" placeholder="Ask anything..." />
-            <button>Send</button>
-        </div>
-    `;
 
-    messagesEl = el.querySelector(".fy-chat-messages") as HTMLDivElement;
-    inputEl = el.querySelector(".fy-chat-input input") as HTMLInputElement;
+    // Header
+    const header = document.createElement("div");
+    header.className = "fy-chat-header";
+    const title = document.createElement("span");
+    title.textContent = "Formify Chat";
+    const closeBtn = document.createElement("button");
+    closeBtn.title = "Close";
+    closeBtn.textContent = "✕";
+    header.appendChild(title);
+    header.appendChild(closeBtn);
+
+    // Messages
+    messagesEl = document.createElement("div");
+    messagesEl.className = "fy-chat-messages";
+
+    // Input area
+    const inputWrap = document.createElement("div");
+    inputWrap.className = "fy-chat-input";
+    inputEl = document.createElement("input");
+    inputEl.type = "text";
+    inputEl.placeholder = "Ask anything...";
+    const sendBtn = document.createElement("button");
+    sendBtn.textContent = "Send";
+    inputWrap.appendChild(inputEl);
+    inputWrap.appendChild(sendBtn);
+
+    el.appendChild(header);
+    el.appendChild(messagesEl);
+    el.appendChild(inputWrap);
 
     // Close
-    el.querySelector(".fy-chat-header button")!.addEventListener("click", () => toggle(false));
+    closeBtn.addEventListener("click", () => toggle(false));
 
     // Send
-    el.querySelector(".fy-chat-input button")!.addEventListener("click", () => send());
+    sendBtn.addEventListener("click", () => send());
     inputEl.addEventListener("keydown", (e) => {
         if (e.key === "Enter") send();
     });
 
     // Dragging
-    const header = el.querySelector(".fy-chat-header") as HTMLDivElement;
     header.addEventListener("mousedown", (e) => {
         isDragging = true;
         offsetX = e.clientX - el.offsetLeft;
