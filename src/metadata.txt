@@ -1,0 +1,13 @@
+// ==UserScript==
+// @name         Formify
+// @version      5.0
+// @description  Let AI solve your Google Forms
+// @author       Aman524524
+// @license      MIT
+// @grant        GM_addStyle
+// @grant        unsafeWindow
+// @namespace    https://docs.google.com/
+// @match        https://docs.google.com/forms/*
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=docs.google.com
+// @run-at       document-idle
+// ==/UserScript==
