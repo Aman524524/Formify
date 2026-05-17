@@ -93,9 +93,7 @@ export const parse = (): ParsedResult => {
     try {
         log("Using DOM parser");
         return parseFromDOM(selectors);
-    } catch {
-        // DOM parsing failed
-    }
+    } catch {}
 
     try {
         const globalData = unsafeWindow?.FB_PUBLIC_LOAD_DATA_;
@@ -103,9 +101,7 @@ export const parse = (): ParsedResult => {
             log("Falling back to global variable parser");
             return parseFromGlobalVar(globalData);
         }
-    } catch {
-        // not available
-    }
+    } catch {}
 
     throw new Error("Could not parse form");
 };

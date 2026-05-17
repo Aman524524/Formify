@@ -19,7 +19,6 @@ export const create = ({ question, options, answer, explanation, isError }: Answ
     const card = document.createElement("div");
     card.className = `fy-answer formify-root${showAnswers ? "" : " hidden"}`;
 
-    // Header
     const header = document.createElement("div");
     header.className = "fy-answer-header";
 
@@ -46,7 +45,6 @@ export const create = ({ question, options, answer, explanation, isError }: Answ
     header.appendChild(badge);
     header.appendChild(actions);
 
-    // Body
     const body = document.createElement("div");
     body.className = `fy-answer-body${isError ? " error" : ""}`;
 
@@ -76,7 +74,6 @@ export const create = ({ question, options, answer, explanation, isError }: Answ
                 await navigator.clipboard.writeText(currentAnswer);
                 Toast.show("Copied to clipboard", 2000, "success");
             } catch {
-                // Fallback for clipboard API failure
                 selectAndCopy(currentAnswer);
                 Toast.show("Copied to clipboard", 2000, "success");
             }
@@ -155,8 +152,6 @@ export const createSkeleton = (): HTMLDivElement => {
     card.appendChild(body);
     return card;
 };
-
-// ─── Helpers ────────────────────────────────────────────────────────────────
 
 const buildPrompt = (question: string, optionsStr: string): string => {
     return Storage.get("customPrompt") + "\n" + question +

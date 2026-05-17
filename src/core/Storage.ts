@@ -15,8 +15,6 @@ const writeAll = (data: Partial<Settings>) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 };
 
-// ─── Public API ─────────────────────────────────────────────────────────────
-
 export const get = <K extends keyof Settings>(key: K): Settings[K] => {
     const data = readAll();
     return (data[key] ?? DEFAULT_SETTINGS[key]) as Settings[K];

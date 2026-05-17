@@ -13,7 +13,6 @@ const build = (): HTMLDivElement => {
     const el = document.createElement("div");
     el.className = "fy-chat formify-root";
 
-    // Header
     const header = document.createElement("div");
     header.className = "fy-chat-header";
     const title = document.createElement("span");
@@ -24,11 +23,9 @@ const build = (): HTMLDivElement => {
     header.appendChild(title);
     header.appendChild(closeBtn);
 
-    // Messages
     messagesEl = document.createElement("div");
     messagesEl.className = "fy-chat-messages";
 
-    // Input area
     const inputWrap = document.createElement("div");
     inputWrap.className = "fy-chat-input";
     inputEl = document.createElement("input");
@@ -43,16 +40,13 @@ const build = (): HTMLDivElement => {
     el.appendChild(messagesEl);
     el.appendChild(inputWrap);
 
-    // Close
     closeBtn.addEventListener("click", () => toggle(false));
 
-    // Send
     sendBtn.addEventListener("click", () => send());
     inputEl.addEventListener("keydown", (e) => {
         if (e.key === "Enter") send();
     });
 
-    // Dragging
     header.addEventListener("mousedown", (e) => {
         isDragging = true;
         offsetX = e.clientX - el.offsetLeft;

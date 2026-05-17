@@ -67,8 +67,6 @@ const callOpenAI = async (model: string, apiKey: string, prompt: string): Promis
     }
 };
 
-// ─── Public API ─────────────────────────────────────────────────────────────
-
 // ─── Response parsing ────────────────────────────────────────────────────────
 
 export interface AIAnswer {
@@ -86,7 +84,7 @@ export const parseResponse = (raw: string): AIAnswer => {
             try {
                 const json = JSON.parse(match[0]);
                 if (json.answer) return { answer: json.answer, explanation: json.explanation || "" };
-            } catch { /* fall through */ }
+            } catch {}
         }
     }
     return { answer: raw, explanation: "" };

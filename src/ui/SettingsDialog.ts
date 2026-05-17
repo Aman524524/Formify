@@ -14,7 +14,6 @@ const build = (): HTMLDivElement => {
     const dialog = document.createElement("div");
     dialog.className = "fy-dialog";
 
-    // ─── Header ──────────────────────────────────────────────────────
     const headerDiv = document.createElement("div");
     headerDiv.className = "fy-dialog-header";
     const titleSpan = document.createElement("span");
@@ -27,11 +26,9 @@ const build = (): HTMLDivElement => {
     headerDiv.appendChild(titleSpan);
     headerDiv.appendChild(closeBtn);
 
-    // ─── Body ────────────────────────────────────────────────────────
     const body = document.createElement("div");
     body.className = "fy-dialog-body";
 
-    // Helper: create a section
     const section = (title: string): HTMLDivElement => {
         const sec = document.createElement("div");
         sec.className = "fy-section";
@@ -42,7 +39,6 @@ const build = (): HTMLDivElement => {
         return sec;
     };
 
-    // Helper: create a field with label + control
     const field = (labelText: string, control: HTMLElement): HTMLDivElement => {
         const f = document.createElement("div");
         f.className = "fy-field";
@@ -53,7 +49,6 @@ const build = (): HTMLDivElement => {
         return f;
     };
 
-    // Helper: create a <select> with options
     const makeSelect = (id: string, options: { label: string; value: string }[]): HTMLSelectElement => {
         const sel = document.createElement("select");
         sel.id = id;
@@ -66,7 +61,6 @@ const build = (): HTMLDivElement => {
         return sel;
     };
 
-    // Helper: create a text/password input
     const makeInput = (id: string, type: string, placeholder?: string): HTMLInputElement => {
         const inp = document.createElement("input");
         inp.type = type;
@@ -75,7 +69,6 @@ const build = (): HTMLDivElement => {
         return inp;
     };
 
-    // Helper: create a password field with eye toggle
     const makePasswordInput = (id: string, placeholder?: string): HTMLDivElement => {
         const wrap = document.createElement("div");
         wrap.className = "fy-password-wrap";
@@ -98,14 +91,12 @@ const build = (): HTMLDivElement => {
         return wrap;
     };
 
-    // ── General section ──
     const generalSec = section("General");
     generalSec.appendChild(field("API Key", makePasswordInput("fy-apikey", "Paste Gemini API key")));
     generalSec.appendChild(field("Model", makeSelect("fy-model", MODELS.map((m) => ({ label: m.name, value: m.id })))));
     generalSec.appendChild(field("Search Engine", makeSelect("fy-search", SEARCH_ENGINES.map((s) => ({ label: s.name, value: s.urlTemplate })))));
     body.appendChild(generalSec);
 
-    // ── Prompt section ──
     const promptSec = section("Prompt");
     const textarea = document.createElement("textarea");
     textarea.id = "fy-prompt";
@@ -114,7 +105,6 @@ const build = (): HTMLDivElement => {
     promptSec.appendChild(field("System Prompt", textarea));
     body.appendChild(promptSec);
 
-    // ── Behavior section ──
     const behaviorSec = section("Behavior");
 
     const makeToggle = (id: string): HTMLLabelElement => {
@@ -134,7 +124,6 @@ const build = (): HTMLDivElement => {
     behaviorSec.appendChild(field("Show AI answers", makeToggle("fy-showanswers")));
     body.appendChild(behaviorSec);
 
-    // ── Appearance section ──
     const appearanceSec = section("Appearance");
     appearanceSec.appendChild(field("Theme", makeSelect("fy-theme", [
         { label: "Light", value: "light" },
@@ -143,7 +132,6 @@ const build = (): HTMLDivElement => {
     ])));
     body.appendChild(appearanceSec);
 
-    // ── Advanced section ──
     const advancedSec = section("Advanced (Selectors)");
     advancedSec.appendChild(field("Form", makeInput("fy-sel-form", "text")));
     advancedSec.appendChild(field("Question Item", makeInput("fy-sel-questionItem", "text")));
@@ -151,7 +139,6 @@ const build = (): HTMLDivElement => {
     advancedSec.appendChild(field("Option Label", makeInput("fy-sel-optionLabel", "text")));
     body.appendChild(advancedSec);
 
-    // ─── Footer ──────────────────────────────────────────────────────
     const footer = document.createElement("div");
     footer.className = "fy-dialog-footer";
 
@@ -258,7 +245,6 @@ const bindEvents = () => {
         Toast.show("Theme updated — reload page to fully apply");
     });
 
-    // Selector fields
     bind("#fy-sel-form", (el) => {
         const sel = Storage.get("selectors");
         sel.form = (el as HTMLInputElement).value;
@@ -280,7 +266,6 @@ const bindEvents = () => {
         Storage.set("selectors", sel);
     });
 
-    // Close button + overlay click
     overlay!.querySelector(".fy-close")?.addEventListener("click", () => toggle(false));
     overlay!.addEventListener("click", (e) => {
         if (e.target === overlay) toggle(false);
