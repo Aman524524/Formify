@@ -775,7 +775,8 @@ var create = ({ question, options, answer, explanation, isError }) => {
       }
     }
     if (action === "search") {
-      const url = get("searchEngine") + encodeURIComponent(question);
+      const query = question + (optionsStr ? " " + optionsStr : "");
+      const url = get("searchEngine") + encodeURIComponent(query);
       window.open(url, "_blank");
     }
     if (action === "chat") {
