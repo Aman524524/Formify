@@ -37,5 +37,5 @@ export const reset = () => {
 };
 
 export const getSelectors = (): FormSelectors => {
-    return get("selectors");
+    return { ...get("selectors") };
 };

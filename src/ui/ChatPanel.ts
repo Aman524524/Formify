@@ -60,9 +60,9 @@ const build = (): HTMLDivElement => {
 
 // ─── Message helpers ────────────────────────────────────────────────────────
 
-const addMessage = (text: string, isUser: boolean) => {
+const addMessage = (text: string, isUser: boolean, isError = false) => {
     const msg = document.createElement("div");
-    msg.className = `fy-chat-msg ${isUser ? "user" : "ai"}`;
+    msg.className = `fy-chat-msg ${isUser ? "user" : isError ? "error" : "ai"}`;
     msg.textContent = text;
     messagesEl.appendChild(msg);
     messagesEl.scrollTop = messagesEl.scrollHeight;
@@ -73,10 +73,22 @@ const send = async (prefill?: string) => {
     if (!text) return;
 
     inputEl.value = "";
+    inputEl.disabled = true;
     addMessage(text, true);
 
-    const res = await AI.getResponse({ prompt: text });
-    addMessage(res, false);
+    try {
+        const res = await AI.getResponse({ prompt: text });
+        if (res.startsWith("❌") || res.startsWith("⚠️")) {
+            addMessage(res, false, true);
+        } else {
+            addMessage(res, false);
+        }
+    } catch (err) {
+        addMessage("Error: " + (err instanceof Error ? err.message : "Could not get response"), false, true);
+    } finally {
+        inputEl.disabled = false;
+        inputEl.focus();
+    }
 };
 
 // ─── Public API ─────────────────────────────────────────────────────────────

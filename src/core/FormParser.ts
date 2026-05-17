@@ -28,8 +28,8 @@ const mapQuestion = (question: any): ParsedQuestion => {
         title: question[1],
         moreInfo: question[9] || null,
         type: question[3],
-        id: question[4][0][0],
-        required: !!question[4][0][2],
+        id: question[4]?.[0]?.[0] ?? 0,
+        required: !!question[4]?.[0]?.[2],
         options,
     };
 };
@@ -66,7 +66,7 @@ const parseQuestions = (form: HTMLFormElement, sel: FormSelectors): ParsedQuesti
     return [...items].map((el) => {
         const dataDiv = el.querySelector(sel.questionDataDiv);
         const raw = dataDiv?.getAttribute("data-params");
-        const cleaned = raw?.replace("%.@.", "[").replace(/&quot;/g, "'");
+        const cleaned = raw?.replace("%.@.", "[").replace(/&quot;/g, '"');
         const arr = JSON.parse(cleaned || "[]")[0];
         return mapQuestion(arr);
     });

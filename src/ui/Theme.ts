@@ -1,5 +1,5 @@
 import { THEMES } from "../config/defaults";
-import type { ThemeMode, ThemeColors } from "../config/types";
+import type { ThemeColors } from "../config/types";
 import * as Storage from "../core/Storage";
 
 const getEffectiveTheme = (): "light" | "dark" => {

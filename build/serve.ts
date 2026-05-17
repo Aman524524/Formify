@@ -1,7 +1,7 @@
 import { build } from "./build";
 
 const server = Bun.serve({
-    port: process.env.PORT || 1024,
+    port: process.env["PORT"] || 1024,
     routes: {
         "/": async () => {
             // Build the files

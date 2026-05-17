@@ -31,8 +31,9 @@ declare const GM_addStyle: (css: string) => void;
         );
         if (key) {
             Storage.set("apiKey", key);
+            Toast.show("API key saved", 2000, "success");
         } else {
-            Toast.show("API key required — open settings with Alt+K");
+            Toast.show("API key required — open settings with Alt+K", 4000, "error");
         }
     }
 
@@ -67,7 +68,7 @@ declare const GM_addStyle: (css: string) => void;
         log("Parsed", formData.questions.length, "questions");
     } catch (err) {
         error("Failed to parse form:", err);
-        Toast.show("Failed to parse form — check console");
+        Toast.show("Failed to parse form — check console", 4000, "error");
         return;
     }
 
@@ -86,10 +87,29 @@ declare const GM_addStyle: (css: string) => void;
             question.title +
             (optionsStr ? "\nOptions: " + optionsStr : "");
 
-        const aiAnswer = await AI.getResponse({ prompt });
+        // Show loading skeleton while waiting
+        const skeleton = AnswerCard.createSkeleton();
+        container.appendChild(skeleton);
+
+        let aiAnswer: string;
+        let isError = false;
+
+        try {
+            aiAnswer = await AI.getResponse({ prompt });
+            if (aiAnswer.startsWith("❌") || aiAnswer.startsWith("⚠️")) {
+                isError = true;
+            }
+        } catch (err) {
+            aiAnswer = "Failed: " + (err instanceof Error ? err.message : "Unknown error");
+            isError = true;
+            error("Question", i + 1, "failed:", err);
+        }
+
+        // Remove skeleton, insert real card
+        skeleton.remove();
 
         // ─── Auto-fill clickable options ────────────────────────────────
-        if (Storage.get("autoFill")) {
+        if (!isError && Storage.get("autoFill")) {
             const labelSel = selectors.optionLabel;
             const labels = container.querySelectorAll(labelSel);
 
@@ -99,7 +119,7 @@ declare const GM_addStyle: (css: string) => void;
                     // Type 2 = MCQ, Type 4 = Checkboxes
                     if (question.type === 2 || question.type === 4) {
                         (label as HTMLElement).click();
-                        if (question.type === 2) break; // MCQ: only one answer
+                        if (question.type === 2) break;
                     }
                 }
             }
@@ -110,11 +130,12 @@ declare const GM_addStyle: (css: string) => void;
             question: question.title,
             options: question.options,
             answer: aiAnswer,
+            isError,
         });
 
         container.appendChild(card);
     }
 
     log("Done processing all questions");
-    Toast.show("Formify finished ✓");
+    Toast.show("Formify finished ✓", 3000, "success");
 })();
